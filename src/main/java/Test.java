@@ -1,13 +1,11 @@
 import utils.BigNumber;
 
-import java.util.Arrays;
-
 public class Test {
     private static boolean isDebug = false;
 
     public static void main(String[] args) {
 
-        for (int i = 1; i < 30; i++) {
+        for (int i = 1; i < 50; i++) {
             System.out.println("\n### x = " + i);
             Enpx(i);
         }
@@ -90,36 +88,48 @@ public class Test {
         BigNumber[] ya = new BigNumber[power + 1];
         y(power + 1, aDeterminant, ya);//求Ya系数
 
+        BigNumber[] coefficients = new BigNumber[power + 2];
+        for (int i = 0; i < coefficients.length; i++) {
+            coefficients[i] = new BigNumber(0);
+        }
         System.out.print("Yb = ");
         for (int i = 0; i < yb.length - 1; i++) {
             String v = yb[i] + "*n^" + (power - i - 1) + " + ";
             System.out.print(v);
+            coefficients[power - i - 1 + 2] = coefficients[power - i - 1 + 2].add(yb[i].divide(2));
+            coefficients[power - i - 1 + 1] = coefficients[power - i - 1 + 1].add(yb[i].divide(2));
         }
         System.out.println(yb[yb.length - 1]);
+        coefficients[2] = coefficients[2].add(yb[yb.length - 1].divide(2));
+        coefficients[1] = coefficients[1].add(yb[yb.length - 1].divide(2));
 
         System.out.print("Ya = ");
         for (int i = 0; i < ya.length - 1; i++) {
             String v = ya[i] + "*n^" + (power - i) + " + ";
             System.out.print(v);
+            coefficients[power - i + 1] = coefficients[power - i + 1].add(ya[i]);
         }
         System.out.println(ya[ya.length - 1]);
+        coefficients[1] = coefficients[1].add(ya[ya.length - 1]);
 
         System.out.println("1^" + power + " + 2^" + power + " + ... + n^" + power + " = Yb * ( ( 1 + n ) * n / 2 ) + Ya * n");
-
-        if (isDebug == true) {
-            check(power, ya, yb);
+        System.out.print("= ");
+        for (int i = coefficients.length - 1; i > 0; i--) {
+            System.out.print(coefficients[i] + "*n^" + i + " + ");
         }
+        System.out.println(coefficients[0]);
 
+        check(power, ya, yb, coefficients);
     }
 
-    private static void check(int power, BigNumber[] ya, BigNumber[] yb) {
-        long n = 8000L;
+    private static void check(int power, BigNumber[] ya, BigNumber[] yb, BigNumber[] coefficients) {
+        long n = 100000;
         System.out.println("\ncheck n=" + n + "  power=" + power);
         BigNumber number1 = new BigNumber(0);
         for (int i = 1; i <= n; i++) {
             number1 = number1.add(new BigNumber(i).pow(power));
         }
-        System.out.println("sum1 " + number1);
+        System.out.println("sum " + number1);
 
 
         BigNumber numberYb = new BigNumber(0);
@@ -137,10 +147,22 @@ public class Test {
         numberYa = numberYa.multiply(n);
 
         BigNumber number2 = numberYb.add(numberYa);
-        System.out.println("sum2 " + number2);
 
-        System.out.println("equals ? " + number1.equals(number2));
+        if (!number1.equals(number2)) {
+            System.out.println("sum2 " + number2);
+            throw new RuntimeException();
+        }
 
+        BigNumber sum = new BigNumber(0);
+        BigNumber v = new BigNumber(n);
+        for (int i = 1; i < coefficients.length; i++) {
+            sum = sum.add(coefficients[i].multiply(v));
+            v = v.multiply(n);
+        }
+        if (!number1.equals(sum)) {
+            System.out.println("sum3 " + sum);
+            throw new RuntimeException();
+        }
     }
 
     private static void y(int power, BigNumber[][] bDeterminant, BigNumber[] y) {
@@ -181,7 +203,7 @@ public class Test {
         System.out.println("# determinant");
         for (int i = 0; i < determinant.length; i++) {
             for (int j = 0; j < determinant[i].length; j++) {
-                System.out.print(String.format("%8s", determinant[i][j].toString()));
+                System.out.print(String.format("%12s", determinant[i][j].toString()));
             }
             System.out.println();
         }
