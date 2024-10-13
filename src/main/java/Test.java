@@ -1,15 +1,25 @@
-import utils.BigNumber;
-
 public class Test {
     private static boolean isDebug = false;
 
     public static void main(String[] args) {
 
-        for (int i = 1; i < 50; i++) {
+        for (int i = 1; i < 30; i++) {
             System.out.println("\n### x = " + i);
             Enpx(i);
         }
 
+
+//        for (long x = 1; x < 1000; x += 2) {
+//            System.out.println();
+//            System.out.println(x);
+//            double yb = x + 1;
+//            double ya = x * x / -6f - x / 3f - 0.5;
+//            System.out.println(yb + "  " + ya);
+//
+//            double sum = (x + 1) * (x + 1) / 4f * yb + (x + 1) / 2f * ya;
+//
+//            System.out.println(sum);
+//        }
 
     }
 
@@ -68,7 +78,17 @@ public class Test {
             b[i - 1] = b(1, i, y, x_avg, y_avg);
             a[i - 1] = y_avg.subtract(b[i - 1].multiply(x_avg));//a尖
         }
-
+//        System.out.println("\n-------" + power);
+//        for (int i = 3; i < power + 4; i++) {
+//            System.out.print(b[i-1] + ",");
+//        }
+//        System.out.println();
+//        for (int i = 3; i < power + 4; i++) {
+//            System.out.print(a[i-1] + ",");
+//        }
+//        if (true) {
+//            return;
+//        }
         BigNumber[][] bDeterminant = new BigNumber[power][power + 1];
         determinant(power, b, bDeterminant);
         printDeterminant(bDeterminant);

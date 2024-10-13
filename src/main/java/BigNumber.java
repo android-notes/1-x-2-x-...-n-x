@@ -1,5 +1,3 @@
-package utils;
-
 import java.math.BigInteger;
 
 public class BigNumber implements Cloneable {
