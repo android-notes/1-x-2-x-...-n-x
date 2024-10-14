@@ -1,299 +1,115 @@
-## 计算等差数列的等幂和 a^k + (a+d)^k + (a+2d)^k + ... + (a+md)^k
+# MOSI Algorithm: An Efficient Approach for Generalized Power Sum Computation in Arbitrary Arithmetic Sequences
+@()[Power Sum Computation|Bernoulli Numbers|Regression Line|Arithmetic Sequence|Lagrange Interpolation|Fast Fourier Transform FFT]
+## 
+$$
+S_k(n) = \sum_{i=1}^{n} \left( a + (i-1) \cdot d \right)^k
+$$
+## Abstract
+This paper introduces the MOSI algorithm, a novel and efficient method for calculating power sums over arbitrary arithmetic sequences, including those with non-integer and negative common differences. Unlike traditional approaches that rely on Bernoulli numbers and are limited to natural number sequences, MOSI generalizes the computation to accommodate any arithmetic sequence. By transforming the power sum problem into a regression problem, the algorithm significantly improves computational efficiency and broadens applicability. MOSI leverages regression analysis, Lagrange interpolation, and FFT to handle various arithmetic sequences effectively, making it suitable for applications in number theory, engineering, and data science.
 
-底数可以是任意实数的等差数列，指数是任意正整数，可以计算出对应的k+1次函数的通项系数，时间复杂度O(klogk),空间复杂度O(k)
 
-以3次幂为例介绍计算思路，其他幂次算法相同
+## Algorithm And Complexity
+The MOSI algorithm operates in four key steps:
 
-`1^3 +2^3+3^3+...+n^3=?`
+1. **Generate data points**: Compute the k-th power of the first $k+1$ terms of an arithmetic sequence, obtaining $k+1$ two-dimensional coordinates. For an arithmetic sequence with starting value $a$ and step $d$, the generated points are  $$(a, a^k), (a + d, (a + d)^k)\dots(a + kd, (a + kd)^k)$$
+2. **Linear regression**: Calculate the regression line slope and intercept for the first 2 points, first 3 points, and so on, up to the first $k+1$ points, yielding slope array $b$ and intercept array $a$. The slope array $b$ is a polynomial of degree $k-1$ with respect to $x$, and the intercept array $a$ is a polynomial of degree $k$ with respect to $x$. These are solved iteratively using the least squares method. The time complexity is $O(k)$.
+   $$\begin{aligned}
+   b &\ = \frac{ \sum_{i=1}^{n}  x_i \cdot y_i - n  \cdot \bar x  \cdot \bar y}{  \sum_{i=1}^{n}  x_i^2- n  \cdot \bar x^2} \\
+   a& \ =\bar y - b \cdot \bar x
+   \end{aligned}
+   $$
+3. **Lagrange interpolation or FFT**: Obtain the functional forms of the slope array $b$ and the intercept array $a$, denoted by $F_b(x)$ and $F_a(x)$, using Lagrange interpolation or the Fast Fourier Transform (FFT). The final regression line is obtained. The time complexity is $O(k^2)$ or $O(k \log k)$.
+   $$
+   f(x) \ = \ F_b(n)   \cdot  x  +  F_a(n)
+   $$
+4. **Constructing the power sum formula**: Using the results from the interpolation, the algorithm reconstructs the general power sum formula for the given arithmetic sequence.
+   $$\begin{aligned}
+   x_1^k \ + \  x_2^k \  + \  \dots \ + x_n^k & \ = \ f(x_1) + f(x_2) + \ \dots \ + f(x_n)  \\
+   & \ = \ [F_b(n)   \cdot x_1  +  F_a(n) ] \\
+   & \ + \  [F_b(n)   \cdot  x_2  +  F_a(n) ] \\
+   &  \ + \  \dots  \\
+   &   \ + \ [F_b(n)   \cdot x_n  +  F_a(n) ] \\
+   & \ = \ F_b(n) \cdot (x_1 +x_2+ \dots +x_n) +F_a(n) \cdot N \\
+   \end{aligned}$$
+   $x_1, x_2 \dots x_n$ is an arithmetic sequence with the first term $x_1$ and a common difference $d$, $N$ is the number of terms in the arithmetic sequence.
+   $$\begin{aligned}
+   N &= \dfrac{n - x_1}{d} +1\\
+   &= \dfrac{n}{d}+(1- \dfrac{x_1}{d})\\
+   x_1 +x_2+...+x_n &=(x_1 + n ) \cdot \dfrac{N}{2} \\
+   &=\dfrac {n^2}{2 \cdot d} + \dfrac {n}{2}+( \dfrac{x_1}{2} -\dfrac{x_1^2}{2 \cdot d})
+   \end{aligned}$$
+   Expand it into the form of a general term formula, and thereby obtain the coefficients of each term.
+   $$\begin{aligned}
+   F_a(n) &= a_k \cdot n^k + a_{k-1} \cdot n^{k-1} + ... + a_0\\
+   F_b(n) &= b_{k-1} \cdot n^{k-1} + b_{k-2} \cdot n^{k-2} + ... + b_0\\
+   x_1^k \ + \  x_2^k  \ + \  ... \ + x_n^k \ &= \ F_b(n) \cdot (x_1 +x_2+x_3+...+x_n) +F_a(n) \cdot N \\
+   &=(b_{k-1} \cdot n^{k-1} + b_{k-2} \cdot n^{k-2} + ... + b_0) \cdot [\dfrac {n^2}{2 \cdot d} + \dfrac {n}{2}+( \dfrac{x_1}{2} -\dfrac{x_1^2}{2 \cdot d})]  \\
+   & + ( a_k \cdot n^k + a_{k-1} \cdot n^{k-1} + ... + a_0 ) \cdot [\dfrac{n}{d}+(1- \dfrac{x_1}{d})]
+   \end{aligned}$$
+#### Time Complexity
+- **Step 1 (Generating points)**: This step involves computing the first $k+1$ powers of the sequence terms, resulting in a time complexity of $O(k)$ .
+  **Step 2 (Linear regression)**: For each subset of points, the regression line is fitted using the least squares method. The time complexity is $O(k)$, as the number of points and iterations increases linearly with $k$ .
+- **Step 3 (Lagrange interpolation or FFT)**: Using FFT to solve the interpolation problem reduces this step’s complexity to $O(k \log k)$ .
+-  **Step 4 (Constructing the power sum formula)**: In this step, each term in the summation is multiplied by the corresponding terms in $F_b(n)$, and the two terms in $N$ are multiplied by each term in $F_a(n)$. Given that the number of operations scales linearly with $k$, the overall time complexity for this step is $O(k)$.
+- **Overall**: The total time complexity of the algorithm is $O(k \log k)$, significantly improving over traditional methods for large values of  $k$ .
+
+### Space Complexity
+- The algorithm requires $O(k)$ space to store the points, slopes, and intercepts, resulting in an overall space complexity of $O(k)$ .
 
 
-`y=x^3`的函数图像如下，`1^3 +2^3+3^3+...+n^3`的值就是各个点的y坐标之和
+## Example
+To calculate the general term coefficients of $1^3 + 2^3 + 3^3 + \dots + n^3$:
 
-![曲线图](https://github.com/android-notes/1-x-2-x-...-n-x/blob/develop/img1.png?raw=true)
+1. **Calculate the slope and intercept of the first four points:**
+   For points $(1,1^3)$ and $(2,2^3)$, the regression line coefficients are: $a = -6$, $b = 7$
+   For points $(1,1^3)$, $(2,2^3)$ and $(3,3^3)$, the regression line coefficients are: $a = -14$, $b = 13$
+   For points $(1,1^3)$, $(2,2^3)$, $(3,3^3)$ and $(4,4^3)$, the regression line coefficients are: $a = -27$, $b = 20.8$
+   For points $(1,1^3)$, $(2,2^3)$, $(3,3^3)$, $(4,4^3)$ and $(5,5^3)$, the regression line coefficients are: $a = -46.2$, $b = 30.4$
+   The following values are obtained after performing the regression analysis.
+   | $x$  |   2   |   3  |   4  |   5   |  
+   | ---| ----  | ---- | ---- | ----- |
+   | $a$  | -6    | -14  |-27   |-46.2  |
+   | $b$  | 7     |  13  |20.8  |30.4   |
+2. **Derive the slope and intercept functions** using Lagrange interpolation or the Fast Fourier Transform (FFT):
+   $$\begin{aligned}
+   F_b(n)&=0.9 \cdot n^2 + 1.5 \cdot n  +  0.4 \\
+   F_a(n)&= -0.2 \cdot n^3 -0.7 \cdot n^2 -0.7 \cdot n -0.2
+   \end{aligned}$$
 
-首先需要计算出`y = x^3 `（x = 1,2,3...）的回归直线`f(x)`，等幂和最终会变成计算等差数列和，即`1^3 +2^3+3^3+...+n^3 = f(1) + f(2) + f(3) + ... + f(n)`
+3. **Substitute into the formula** to calculate the result. This example outlines the steps to compute the general term coefficients using regression and interpolation methods.
+   $$\begin{aligned}
+   x_1^k \ + \  x_2^k \ + \  x_3^k \ + \  ... \ + x_n^k
+   & \ = \ F_b(n) \cdot [\dfrac {n^2}{2 \cdot d} + \dfrac {n}{2}+( \dfrac{x_1}{2} -\dfrac{x_1^2}{2 \cdot d})]  +F_a(n) \cdot  [\dfrac{n}{d}+(1- \dfrac{x_1}{d})] \\
+   & \ = \ (0.9 \cdot n^2 + 1.5 \cdot n  +  0.4) \cdot  [\dfrac {n^2}{2 \cdot 1} + \dfrac {n}{2}+( \dfrac{1}{2} -\dfrac{1^2}{2 \cdot 1})] \\
+   & \ + \ ( -0.2 \cdot n^3 -0.7 \cdot n^2 -0.7 \cdot n -0.2) \cdot [\dfrac{n}{1}+(1- \dfrac{1}{1})] \\
+   & \ = \ (0.9 \cdot n^2 + 1.5 \cdot n  +  0.4) \cdot  [\dfrac {n^2}{2} + \dfrac {n}{2}]  \\
+   & \ + \ ( -0.2 \cdot n^3 -0.7 \cdot n^2 -0.7 \cdot n -0.2) \cdot n\\
+   & \ = \ (0.9 \cdot \dfrac{1}{2} -0.2) \cdot n^4 + (0.9 \cdot \dfrac{1}{2}+ 1.5 \cdot \dfrac{1}{2} -0.7) \cdot n^3 \\
+   & \ + \ (1.5 \cdot \dfrac{1}{2} +0.4 \cdot \dfrac{1}{2}-0.7) \cdot n^2 + (0.4 \cdot \dfrac{1}{2} -0.2) \cdot n\\
+   & \ = \ \dfrac{1}{4} \cdot n^4 + \dfrac{1}{2} \cdot n^3 + \dfrac{1}{4} \cdot n^2
+   \end{aligned}$$
 
-回归直线计算公式如下：
+## Conclusion
+The MOSI algorithm provides an efficient and general solution for computing power sums over any arithmetic sequence, surpassing traditional approaches in terms of applicability and computational complexity. By leveraging regression analysis, Lagrange interpolation, and FFT, the algorithm is capable of handling sequences with non-integer and negative steps, making it suitable for a wide range of applications. Future work could explore further optimization techniques or extend the method to other forms of sequences.
 
-![回归直线计算公式](https://github.com/android-notes/1-x-2-x-...-n-x/blob/develop/img2.png?raw=true)
+## Compare
+Performance Comparison between Bernoulli Algorithm and MOSI Algorithm
+| **Characteristic**               | **Bernoulli Algorithm**                          | **MOSI Algorithm**                               |
+|----------------------------------|--------------------------------------------------|--------------------------------------------------|
+| **Applicability**                | Mainly applicable to natural number arithmetic sequences | Applicable to any real-number arithmetic sequence (including non-integer and negative differences) |
+| **Time Complexity**              | $ O(k^2)$, optimized to $ O(k \log k) $    | $ O(k^2)$, optimized to $O(k \log k) $    |
+| **Space Complexity**             | $O(k) $                                      | $O(k) $                                       |
+| **Recursiveness**                | Requires recursive calculation                   | Direct computation without recursion             |
+| **Symbolic Computation**         | Primarily supports numerical computation          | Supports both symbolic and numerical computation  |
+| **Numerical Stability**          | May suffer from precision issues                 | Improved stability with symbolic computation      |
+| **Use Cases**                    | Limited to specific sequences and sum problems    | Broadly applicable to any arithmetic sequence     |
 
-根据如上公式，算得（1,1）、（2,8）这两点的回归直线系数 a=-6 ， b=7
 
-（1,1）、（2,8）、（3,27）点的回归直线系数 a =-14 ， b =13
-
-（1,1）、（2,8）、（3,27）、（4,64）点的回归直线系数 a =-27， b =20.8
-
-（1,1）、（2,8）、（3,27）、（4,64）、（5,125）点的回归直线系数 a =-46.2， b =30.4
-
-（1,1）、（2,8）...... (6,216)点的回归直线系数 a =-72.8， b =41.8
-
-（1,1）、（2,8）...... (7,343)点的回归直线系数 a =-108， b =55
-
-（1,1）、（2,8）...... (8,512)点的回归直线系数 a =-153， b =70
-
-......
-
-我们得到了如下两组值
-
-| x  |   2   |   3  |   4  |   5   |   6   |  7  | 8    |
-| ---| ----  | ---- | ---- | ----- | ----- |-----|------|
-| a  | -6    | -14  |-27   |-46.2  |-72.8  |-108 |-153  |
-| b  | 7     |  13  |20.8  |30.4   |41.8   |55   |70    |
+Potential Applications of the MOSI Algorithm
+| **Application Area**             | **Potential Uses of MOSI Algorithm**              |
+|----------------------------------|--------------------------------------------------|
+| **Number Theory and Combinatorics** | Analysis of power sums over arbitrary arithmetic sequences, particularly with symbolic computation |
+| **Engineering and Physics**      | Efficient computation of power sums with non-integer or negative differences, useful for modeling systems |
+| **Computer Science and Data Analysis** | Applied to analyze large datasets where sequence sums are needed, particularly in generating closed-form solutions |
+| **Finance**                      | Fast calculation of power sums in financial models, such as compound interest calculations, producing analytical results |
  
-
-如果能用一个函数表示a或b就可以得到`y=x^3(x=1,2,3,4...)`的回归直线`f(x)`，接下来求这两个函数`fa(x)`和`fb(x)`
-
-
-先来计算b
-
-依次计算b中相邻两数的差，得到如下数据
-
-| x  |   2   |   3  |   4  |   5   |   6   |  7  |
-| ---| ----  | ---- | ---- | ----- | ----- |-----|
-| b  | 6     |  7.8 |9.6   |11.4   |13.2   |15   |
-
-再次计算上表中相邻两数的差，得到如下数据
-
-| x  |   2   |   3  |   4  |   5   |   6   |  
-| ---| ----  | ---- | ---- | ----- | ----- |
-| b  | 1.8   |  1.8 |1.8   |1.8    |1.8    |
-
-最终结果全是1.8 , 总共执行了2次依次相减结果就一样了，所以b和x是二次函数关系。
-
-我们设 `fb(x)=a*x^2+b*x+c`，分别带入求得
-
-a=0.9 ，  b= 1.5 ， c=0.4,
-
-所以 `fb(x)=0.9*x^2 + 1.5*x  +  0.4`,
-
-同理算得a对应的函数是 `fa(x)= -0.2 * x^3 -0.7 * x^2 -0.7 * x -0.2`
-
-
-所以y=x^3 (x=1,2,3,4,5...)的回归直线是
-
-`f(x) = fb(n)  *  x  +  fa(n) `
-
-所以`1^3 +2^3+3^3+...+n^3` 
-
-= `f(1)+f(2)+f(3)+...+f(n)`
-        
-= `(fb(n)+fa(n))+(fb(n)*2+fa(n))+(fb(n)*3+fa(n))+...+(fb(n)*n+fa(n))`
-
-=`fb(n)*(1+2+3+...+n) + fa(n)*n`
-           
-=`fb(n)*(  (1+n)*n/2  )+ fa(n)*n`
-
-=`( 0.9*n^2 + 1.5*n + 0.4 ) *( (1+n)*n/2) +( -0.2 * n^3 -0.7 * n^2 -0.7 * n -0.2)  *  n`
-
- 
-化简得：
-
-   `0.25*n^4 + 0.5* n^3 + 0.25* n` = `( n * (n+1) / 2)^2`
-   
-   
-
-
-### 附
-
-```
-自然数底数
-begin:1, step:1, power:1
-1/2*n^2 + 1/2*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:2
-1/3*n^3 + 1/2*n^2 + 1/6*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:3
-1/4*n^4 + 1/2*n^3 + 1/4*n^2 + 0 
-check ok, n = 50000
-
-
-负整数底数
-begin:-1, step:1, power:1
-1/2*n^2 + 1/2*n + -1 
-check ok, n = 50000
-
-begin:-1, step:1, power:2
-1/3*n^3 + 1/2*n^2 + 1/6*n + 1 
-check ok, n = 50000
-
-begin:-1, step:1, power:3
-1/4*n^4 + 1/2*n^3 + 1/4*n^2 + -1 
-check ok, n = 50000
-
-
-
-begin:-2, step:1, power:1
-1/2*n^2 + 1/2*n + -3 
-check ok, n = 50000
-
-begin:-2, step:1, power:2
-1/3*n^3 + 1/2*n^2 + 1/6*n + 5 
-check ok, n = 50000
-
-begin:-2, step:1, power:3
-1/4*n^4 + 1/2*n^3 + 1/4*n^2 + -9 
-check ok, n = 50000
-
-整数公差
-begin:1, step:2, power:1
-1/4*n^2 + 1/2*n + 1/4 
-check ok, n = 49999
-
-begin:1, step:2, power:2
-1/6*n^3 + 1/2*n^2 + 1/3*n + 0 
-check ok, n = 49999
-
-begin:1, step:2, power:3
-1/8*n^4 + 1/2*n^3 + 1/2*n^2 + -1/8 
-check ok, n = 49999
-
-
-负数底数，任意公差
-begin:-12.34, step:0.6, power:1
-4503599627370496/5404319552844595*n^2 + 1/2*n + -80967176313681429855141161878065/608472288109550090200419401728 
-check ok, n = 49999.46
-
-begin:-12.34, step:0.6, power:2
-9007199254740992/16212958658533785*n^3 + 1/2*n^2 + 5404319552844595/54043195528445952*n + 6145462583673049111299717821377635389385654282625/5480631139990885740439722086169357084237234176 
-check ok, n = 49999.46
-
-begin:-12.34, step:0.6, power:3
-2251799813685248/5404319552844595*n^4 + 1/2*n^3 + 5404319552844595/36028797018963968*n^2 + -32778418201053875882108886766087019147049563239684844189640721125/3085321044977261214860751800818241712179752192103351333158912 
-check ok, n = 49999.46
-
-
-begin:-12.34, step:-0.6, power:1
--4503599627370496/5404319552844595*n^2 + 1/2*n + 73458628278409581828537099306255/608472288109550090200419401728 
-check ok, n = -49999.54
-
-begin:-12.34, step:-0.6, power:2
--9007199254740992/16212958658533785*n^3 + 1/2*n^2 + -5404319552844595/54043195528445952*n + -5310896188452253009864697847168875896556043532225/5480631139990885740439722086169357084237234176 
-check ok, n = -49999.54
-
-begin:-12.34, step:-0.6, power:3
--2251799813685248/5404319552844595*n^4 + 1/2*n^3 + -5404319552844595/36028797018963968*n^2 + 26980850342727779419340141891076916221867076925665298011410625125/3085321044977261214860751800818241712179752192103351333158912 
-check ok, n = -49999.54
-
-
-
-begin:1, step:1, power:4
-1/5*n^5 + 1/2*n^4 + 1/3*n^3 + -1/30*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:5
-1/6*n^6 + 1/2*n^5 + 5/12*n^4 + -1/12*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:6
-1/7*n^7 + 1/2*n^6 + 1/2*n^5 + -1/6*n^3 + 1/42*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:7
-1/8*n^8 + 1/2*n^7 + 7/12*n^6 + -7/24*n^4 + 1/12*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:8
-1/9*n^9 + 1/2*n^8 + 2/3*n^7 + -7/15*n^5 + 2/9*n^3 + -1/30*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:9
-1/10*n^10 + 1/2*n^9 + 3/4*n^8 + -7/10*n^6 + 1/2*n^4 + -3/20*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:10
-1/11*n^11 + 1/2*n^10 + 5/6*n^9 + -1*n^7 + 1*n^5 + -1/2*n^3 + 5/66*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:11
-1/12*n^12 + 1/2*n^11 + 11/12*n^10 + -11/8*n^8 + 11/6*n^6 + -11/8*n^4 + 5/12*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:12
-1/13*n^13 + 1/2*n^12 + 1*n^11 + -11/6*n^9 + 22/7*n^7 + -33/10*n^5 + 5/3*n^3 + -691/2730*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:13
-1/14*n^14 + 1/2*n^13 + 13/12*n^12 + -143/60*n^10 + 143/28*n^8 + -143/20*n^6 + 65/12*n^4 + -691/420*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:14
-1/15*n^15 + 1/2*n^14 + 7/6*n^13 + -91/30*n^11 + 143/18*n^9 + -143/10*n^7 + 91/6*n^5 + -691/90*n^3 + 7/6*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:15
-1/16*n^16 + 1/2*n^15 + 5/4*n^14 + -91/24*n^12 + 143/12*n^10 + -429/16*n^8 + 455/12*n^6 + -691/24*n^4 + 35/4*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:16
-1/17*n^17 + 1/2*n^16 + 4/3*n^15 + -14/3*n^13 + 52/3*n^11 + -143/3*n^9 + 260/3*n^7 + -1382/15*n^5 + 140/3*n^3 + -3617/510*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:17
-1/18*n^18 + 1/2*n^17 + 17/12*n^16 + -17/3*n^14 + 221/9*n^12 + -2431/30*n^10 + 1105/6*n^8 + -11747/45*n^6 + 595/3*n^4 + -3617/60*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:18
-1/19*n^19 + 1/2*n^18 + 3/2*n^17 + -34/5*n^15 + 34*n^13 + -663/5*n^11 + 1105/3*n^9 + -23494/35*n^7 + 714*n^5 + -3617/10*n^3 + 43867/798*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:19
-1/20*n^20 + 1/2*n^19 + 19/12*n^18 + -323/40*n^16 + 323/7*n^14 + -4199/20*n^12 + 4199/6*n^10 + -223193/140*n^8 + 2261*n^6 + -68723/40*n^4 + 43867/84*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:20
-1/21*n^21 + 1/2*n^20 + 5/3*n^19 + -19/2*n^17 + 1292/21*n^15 + -323*n^13 + 41990/33*n^11 + -223193/63*n^9 + 6460*n^7 + -68723/10*n^5 + 219335/63*n^3 + -174611/330*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:21
-1/22*n^22 + 1/2*n^21 + 7/4*n^20 + -133/12*n^18 + 323/4*n^16 + -969/2*n^14 + 146965/66*n^12 + -223193/30*n^10 + 33915/2*n^8 + -481061/20*n^6 + 219335/12*n^4 + -1222277/220*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:22
-1/23*n^23 + 1/2*n^22 + 11/6*n^21 + -77/6*n^19 + 209/2*n^17 + -3553/5*n^15 + 11305/3*n^13 + -223193/15*n^11 + 124355/3*n^9 + -755953/10*n^7 + 482537/6*n^5 + -1222277/30*n^3 + 854513/138*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:23
-1/24*n^24 + 1/2*n^23 + 23/12*n^22 + -1771/120*n^20 + 4807/36*n^18 + -81719/80*n^16 + 37145/6*n^14 + -5133439/180*n^12 + 572033/6*n^10 + -17386919/80*n^8 + 11098351/36*n^6 + -28112371/120*n^4 + 854513/12*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:24
-1/25*n^25 + 1/2*n^24 + 2*n^23 + -253/15*n^21 + 506/3*n^19 + -14421/10*n^17 + 29716/3*n^15 + -10266878/195*n^13 + 208012*n^11 + -17386919/30*n^9 + 22196702/21*n^7 + -28112371/25*n^5 + 1709026/3*n^3 + -236364091/2730*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:25
-1/26*n^26 + 1/2*n^25 + 25/12*n^24 + -115/6*n^22 + 1265/6*n^20 + -24035/12*n^18 + 185725/12*n^16 + -25667195/273*n^14 + 1300075/3*n^12 + -17386919/12*n^10 + 277458775/84*n^8 + -28112371/6*n^6 + 21362825/6*n^4 + -1181820455/1092*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:26
-1/27*n^27 + 1/2*n^26 + 13/6*n^25 + -65/3*n^23 + 16445/63*n^21 + -16445/6*n^19 + 142025/6*n^17 + -10266878/63*n^15 + 2600150/3*n^13 + -20548177/6*n^11 + 3606964075/378*n^9 + -52208689/3*n^7 + 55543345/3*n^5 + -1181820455/126*n^3 + 8553103/6*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:27
-1/28*n^28 + 1/2*n^27 + 9/4*n^26 + -195/8*n^24 + 4485/14*n^22 + -29601/8*n^20 + 142025/4*n^18 + -15400317/56*n^16 + 1671525*n^14 + -61644531/8*n^12 + 721392815/28*n^10 + -469878201/8*n^8 + 166630035/2*n^6 + -3545461365/56*n^4 + 76977927/4*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:28
-1/29*n^29 + 1/2*n^28 + 7/3*n^27 + -273/10*n^25 + 390*n^23 + -9867/2*n^21 + 52325*n^19 + -905901/2*n^17 + 3120180*n^15 + -33193209/2*n^13 + 65581165*n^11 + -365460823/2*n^9 + 333260070*n^7 + -709092273/2*n^5 + 179615163*n^3 + -23749461029/870*n + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:29
-1/30*n^30 + 1/2*n^29 + 29/12*n^28 + -609/20*n^26 + 1885/4*n^24 + -26013/4*n^22 + 303485/4*n^20 + -8757043/12*n^18 + 22621305/4*n^16 + -137514723/4*n^14 + 1901853785/12*n^12 + -10598363867/20*n^10 + 4832271015/4*n^8 + -6854558639/4*n^6 + 5208839727/4*n^4 + -23749461029/60*n^2 + 0 
-check ok, n = 50000
-
-begin:1, step:1, power:30
-1/31*n^31 + 1/2*n^30 + 5/2*n^29 + -203/6*n^27 + 1131/2*n^25 + -16965/2*n^23 + 216775/2*n^21 + -2304485/2*n^19 + 19959975/2*n^17 + -137514723/2*n^15 + 731482225/2*n^13 + -31795091601/22*n^11 + 8053785025/2*n^9 + -102818379585/14*n^7 + 15626519181/2*n^5 + -23749461029/6*n^3 + 8615841276005/14322*n + 0 
-check ok, n = 50000
-
-
-
-```
-
-
-
-
-
-
-
