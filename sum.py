@@ -11,7 +11,8 @@ def compute_coefficients(begin, step, power):
     for i in range(0, power + 1):
         cur_x += step
         points.append((Fraction(cur_x), Fraction(cur_x ** power)))
-        # 可以增量计算a和b，时间复杂度可以优化到O(k), k是幂指数
+        # It is possible to compute a and b incrementally, optimizing the time
+        # complexity to O(k), where k is the exponent.
         a_b = get_linear_regression_params(points)
         a.append((cur_x, a_b[0]))
         b.append((cur_x, a_b[1]))
@@ -19,9 +20,8 @@ def compute_coefficients(begin, step, power):
     b_coeffs = lagrange_interpolation_coefficients(b[:-1])
     a_coeffs = lagrange_interpolation_coefficients(a)
 
-    # 等差数列求和的常数项
+    # The constant term in the sum of an arithmetic sequence.
     sn_const_term = Fraction(begin, 2) - Fraction(begin ** 2, 2 * step)
-    # 等差数列求和的常数项
     term_count_const_term = Fraction(1) - Fraction(begin, step)
 
     result_coeffs = [Fraction(0) for _ in range(power + 2)]
@@ -37,8 +37,9 @@ def compute_coefficients(begin, step, power):
     return result_coeffs
 
 
-# 拉格朗日插值法，返回多项式的系数
-# 拉格朗日插值法时间复杂度O(k^2)，使用FFT优化后的时间复杂度可以降低到O(klogk)，k是幂指数
+# Lagrange Interpolation Method, returning the coefficients of the polynomial
+# The time complexity of the Lagrange interpolation method is O(k^2), which can be reduced to
+# O(klogk) with the optimization using FFT, where is the exponent.
 def lagrange_interpolation_coefficients(points):
     x_values = [i[0] for i in points]
     y_values = [i[1] for i in points]
@@ -105,11 +106,11 @@ def check(begin, step, power, coeffs):
 
 
 def main():
-    # 底数的公差，可以是任意实数
+    # The common difference of the base can be any real number.
     step = Fraction.from_float(-0.6)
-    # 最小底数，可以是任意实数
+    # The minimum base can be any real number.
     begin = Fraction.from_float(-12.34)
-    # 幂指数，可以是任意正整数
+    # The exponent can be any positive integer.
     for power in range(1, 300):
         print(f"\nbegin:{float(begin)}, step:{float(step)}, power:{power}")
         result_coeffs = compute_coefficients(begin, step, power)
