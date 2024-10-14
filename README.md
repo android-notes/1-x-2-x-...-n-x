@@ -14,8 +14,8 @@ The MOSI algorithm operates in four key steps:
 1. **Generate data points**: Compute the k-th power of the first $k+1$ terms of an arithmetic sequence, obtaining $k+1$ two-dimensional coordinates. For an arithmetic sequence with starting value $a$ and step $d$, the generated points are  $$(a, a^k), (a + d, (a + d)^k)\dots(a + kd, (a + kd)^k)$$
 2. **Linear regression**: Calculate the regression line slope and intercept for the first 2 points, first 3 points, and so on, up to the first $k+1$ points, yielding slope array $b$ and intercept array $a$. The slope array $b$ is a polynomial of degree $k-1$ with respect to $x$, and the intercept array $a$ is a polynomial of degree $k$ with respect to $x$. These are solved iteratively using the least squares method. The time complexity is $O(k)$.
    $$
-   b \ = \frac{ \sum_{i=1}^{n}  x_i \cdot y_i - n  \cdot \bar x  \cdot \bar y}{  \sum_{i=1}^{n}  x_i^2- n  \cdot \bar x^2} \\
-   a \ =\bar y - b \cdot \bar x
+   b= \frac{ \sum_{i=1}^{n}  x_i \cdot y_i - n  \cdot \bar x  \cdot \bar y}{  \sum_{i=1}^{n}  x_i^2- n  \cdot \bar x^2} \\
+   a=\bar y - b \cdot \bar x
    $$
 3. **Lagrange interpolation or FFT**: Obtain the functional forms of the slope array $b$ and the intercept array $a$, denoted by $F_b(x)$ and $F_a(x)$, using Lagrange interpolation or the Fast Fourier Transform (FFT). The final regression line is obtained. The time complexity is $O(k^2)$ or $O(k \log k)$.
    $$
