@@ -5,4 +5,4 @@ S_k(n) = \sum_{i=1}^{n} \left( a + (i-1) \cdot d \right)^k
 $$
 
 
-HangZhouMOSIAlgorithm.pdf
+
