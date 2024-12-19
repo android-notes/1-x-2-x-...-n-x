@@ -1,16 +1,16 @@
 from fractions import Fraction
 
 
-def compute_coefficients(begin, step, power):
+def compute_coefficients(begin, step, exponent):
     cur_x = begin
     points = [
-        (Fraction(cur_x), Fraction(cur_x ** power))
+        (Fraction(cur_x), Fraction(cur_x ** exponent))
     ]
     a = []
     b = []
-    for i in range(0, power + 1):
+    for i in range(0, exponent + 1):
         cur_x += step
-        points.append((Fraction(cur_x), Fraction(cur_x ** power)))
+        points.append((Fraction(cur_x), Fraction(cur_x ** exponent)))
         # It is possible to compute a and b incrementally, optimizing the time
         # complexity to O(k), where k is the exponent.
         a_b = get_linear_regression_params(points)
@@ -24,7 +24,7 @@ def compute_coefficients(begin, step, power):
     sn_const_term = Fraction(begin, 2) - Fraction(begin ** 2, 2 * step)
     term_count_const_term = Fraction(1) - Fraction(begin, step)
 
-    result_coeffs = [Fraction(0) for _ in range(power + 2)]
+    result_coeffs = [Fraction(0) for _ in range(exponent + 2)]
     for i, coef in enumerate(b_coeffs):
         result_coeffs[i + 2] += Fraction(coef, 2 * step)
         result_coeffs[i + 1] += Fraction(coef, 2)
@@ -78,42 +78,42 @@ def get_linear_regression_params(points: [tuple]) -> tuple:
     return a, b
 
 
-def check(begin, step, power, coeffs):
-    n = 50000
-    if step < 0:
-        n = -n
-    sum = Fraction(0)
-    i = begin
-    while True:
-        if step < 0:
-            if i < n:
-                break
-        else:
-            if i > n:
-                break
-        sum += i ** power
-        i += step
-    n = i - step
+def check(begin, step, exponent, coeffs):
+    # Mathematical Induction
+    # check n=begin
+    sum1 = 0
+    for i, coef in enumerate(reversed(coeffs)):
+        index = len(coeffs) - i - 1
+        sum1 = sum1 + coef * begin ** index
 
-    tmp = Fraction(0)
-    p = Fraction(1)
-    for i, coef in enumerate(coeffs):
-        tmp += (coef * p)
-        p *= n
-    if sum != tmp:
-        raise Exception(f"illegal, begin:{begin}, step:{step}, power:{power}, n:{n}, expected:{sum}, real:{tmp}")
-    print(f'check ok, n = {float(n)}')
+    sum2 = begin ** exponent
+    if sum1 != sum2:
+        raise Exception()
+
+    # check n and n+step
+    import sympy as sp
+    n = sp.symbols('n')
+    expr = 0
+    for i, coef in enumerate(reversed(coeffs)):
+        index = len(coeffs) - i - 1
+        pre = coef * ((n - step) ** index)
+        cur = coef * (n ** index)
+        expr = expr + (cur - pre)
+
+    if not expr.equals(n ** exponent):
+        raise Exception()
+    print("Inductive proof: ", sp.expand(expr))
 
 
 def main():
-    # The common difference of the base can be any real number.
-    step = Fraction.from_float(-0.6)
-    # The minimum base can be any real number.
-    begin = Fraction.from_float(-12.34)
+    # The common difference of the base can be any real number, including decimals, negative numbers, etc.
+    step = Fraction.from_float(1)
+    # The minimum base can be any real number, including decimals, negative numbers, etc.
+    begin = Fraction.from_float(1)
     # The exponent can be any positive integer.
-    for power in range(1, 300):
-        print(f"\nbegin:{float(begin)}, step:{float(step)}, power:{power}")
-        result_coeffs = compute_coefficients(begin, step, power)
+    for exponent in range(1, 20):
+        print(f"\nbegin:{float(begin)}, step:{float(step)}, exponent:{exponent}")
+        result_coeffs = compute_coefficients(begin, step, exponent)
         for i, coef in enumerate(reversed(result_coeffs)):
             # print(f"{len(result_coeffs) - i - 1}: {coef}   ", end='')
             index = len(result_coeffs) - i - 1
@@ -126,7 +126,7 @@ def main():
             else:
                 print(f"{coef} ", end='')
         print()
-        check(begin, step, power, result_coeffs)
+        check(begin, step, exponent, result_coeffs)
 
 
 if __name__ == '__main__':
